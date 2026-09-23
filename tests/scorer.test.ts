@@ -73,18 +73,27 @@ describe("scoreJob", () => {
     expect(result.score).toBe(0);
   });
 
-  it("scores a poor location/tech match lower than a strong match", () => {
+  it("scores a poor tech/experience match lower than a strong match", () => {
+    // Location isn't a useful discriminator here: the profile's "India"
+    // preference is a deliberate catch-all (real Naukri postings are
+    // virtually always India-based), so it scores well regardless of city.
     const strong = scoreJob(job({}), profile);
     const weak = scoreJob(
       job({
-        location: "Munich, Germany",
         description: "Java Spring Boot Oracle",
         skills: ["Java", "Spring"],
-        preferredWorkMode: undefined as never,
+        minExperienceYears: 12,
+        maxExperienceYears: 18,
       }),
       profile
     );
     expect(weak.score).toBeLessThan(strong.score);
+  });
+
+  it("still scores a non-Indian posting lower on location than an Indian one", () => {
+    const indian = scoreJob(job({ location: "Bengaluru" }), profile);
+    const overseas = scoreJob(job({ location: "Munich, Germany", workMode: "onsite" }), profile);
+    expect(overseas.breakdown.location).toBeLessThan(indian.breakdown.location);
   });
 
   it("does not reject jobs with an unspecified experience range", () => {

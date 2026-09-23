@@ -69,12 +69,21 @@ function detectWorkMode(text: string): JobDetail["workMode"] {
 }
 
 /**
- * Extracts structured details from a Naukri job-detail page. Selectors here
- * are fallback chains, not verified against a live Naukri session (Phase 19
- * requires that verification before real-run use — see README "Known
- * limitations").
+ * Navigates to the job's detail page and extracts structured details.
+ * Selectors verified live 2026-09-23 against a real authenticated Naukri
+ * session (Phase 19). Owns its own navigation so callers can't accidentally
+ * parse the wrong page (a search-results page previously produced empty
+ * description/skills for every job, silently zeroing the technologies score
+ * component).
  */
 export async function parseJobDetail(page: Page, listing: JobListing): Promise<JobDetail> {
+  await page.goto(listing.url, { waitUntil: "domcontentloaded" });
+  await page
+    .locator("[class*='job-desc'], [class*='JDC__dang-inner-html']")
+    .first()
+    .waitFor({ state: "attached", timeout: 10_000 })
+    .catch(() => undefined);
+
   const description = await firstText(page, [
     "[class*='job-desc']",
     "section.styles_job-desc-container__",

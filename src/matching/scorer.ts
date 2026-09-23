@@ -36,10 +36,27 @@ function scoreExperience(job: JobDetail, profile: CandidateProfile): number {
   return Math.max(0, 1 - (candidateYears - max) / 4);
 }
 
+// Naukri occasionally lists overseas/Gulf roles explicitly tagged with a
+// foreign country name; used so the "India" preference (below) acts as a
+// catch-all for ordinary Indian-city postings without also matching those.
+const NON_INDIAN_LOCATION_MARKERS = [
+  "germany", "usa", "united states", "uk", "united kingdom", "singapore",
+  "dubai", "uae", "canada", "australia", "europe", "gulf",
+];
+
 function scoreLocation(job: JobDetail, profile: CandidateProfile): number {
   const jobLocation = job.location.toLowerCase();
   if (!jobLocation) return 0.5;
-  const hit = profile.preferredLocations.some((loc) => jobLocation.includes(loc.toLowerCase()));
+  // "India" is a deliberate catch-all preference (Naukri postings are
+  // virtually always India-based, and we have no separate country field to
+  // match a city like "Bengaluru" against) rather than a literal substring
+  // match, which would never hit against a bare city name.
+  const looksNonIndian = NON_INDIAN_LOCATION_MARKERS.some((marker) => jobLocation.includes(marker));
+  const acceptsAnyIndianCity =
+    !looksNonIndian && profile.preferredLocations.some((loc) => loc.toLowerCase() === "india");
+  const hit =
+    acceptsAnyIndianCity ||
+    profile.preferredLocations.some((loc) => jobLocation.includes(loc.toLowerCase()));
   return hit ? 1 : job.workMode === "remote" ? 0.9 : 0.2;
 }
 

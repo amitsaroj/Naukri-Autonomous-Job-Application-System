@@ -4,6 +4,8 @@ dist/
 naukri-browser-profile*/
 data/*.db
 data/*.db-journal
+data/*.db-wal
+data/*.db-shm
 logs/*.log
 logs/screenshots/*
 !logs/screenshots/.gitkeep

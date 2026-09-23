@@ -26,7 +26,17 @@ async function firstMatch(scope: Locator, selectors: string[]): Promise<string> 
  */
 export async function scrapeJobCards(page: Page, searchKeyword: string): Promise<JobListing[]> {
   const cards = page.locator(JOB_CARD_SELECTORS.join(", "));
-  const count = await cards.count();
+
+  // Results are client-rendered by React; domcontentloaded fires before they
+  // exist, so wait for the first card rather than counting immediately
+  // (verified live 2026-09-23 — Phase 19).
+  const appeared = await cards
+    .first()
+    .waitFor({ state: "attached", timeout: 10_000 })
+    .then(() => true)
+    .catch(() => false);
+
+  const count = appeared ? await cards.count() : 0;
 
   if (count === 0) {
     getLogger().warn({ event: "NO_JOB_CARDS_FOUND", searchKeyword, url: page.url() });
