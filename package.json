@@ -1,0 +1,45 @@
+{
+  "name": "naukri-agent",
+  "version": "0.1.0",
+  "description": "Autonomous, guarded Naukri.com job application agent (Playwright + SQLite, TypeScript)",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && mkdir -p dist/database/migrations && cp src/database/migrations/*.sql dist/database/migrations/",
+    "postinstall": "playwright install chromium",
+    "agent": "node dist/cli/index.js agent",
+    "search": "node dist/cli/index.js search",
+    "applications": "node dist/cli/index.js applications",
+    "stats": "node dist/cli/index.js stats",
+    "debug": "node dist/cli/index.js debug",
+    "login": "node dist/cli/index.js login",
+    "dev:agent": "ts-node src/cli/index.ts agent",
+    "dev:agent:dry": "ts-node src/cli/index.ts agent --dry-run",
+    "dev:login": "ts-node src/cli/index.ts login",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src tests --ext .ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "pino": "^9.4.0",
+    "pino-pretty": "^11.2.2",
+    "playwright": "^1.47.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^20.14.15",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@typescript-eslint/parser": "^8.5.0",
+    "eslint": "^8.57.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1"
+  }
+}

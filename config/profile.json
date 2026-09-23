@@ -1,0 +1,92 @@
+{
+  "name": "Amit Saroj",
+  "currentTitle": "Software Engineer (Full Stack)",
+  "targetRoles": [
+    "Full Stack Developer",
+    "Software Engineer",
+    "Senior React Developer",
+    "Senior Full Stack Developer",
+    "Node.js Developer",
+    "MERN Stack Developer"
+  ],
+  "totalExperienceYears": 5.7,
+  "totalExperienceStatement": "5+ years",
+  "skills": {
+    "core": [
+      "React.js", "Next.js", "Node.js", "TypeScript", "JavaScript", "MERN",
+      "NestJS", "Express.js", "Fastify", "REST APIs", "GraphQL", "Microservices",
+      "Event-Driven Architecture", "WebSockets", "Socket.IO", "PostgreSQL", "MySQL",
+      "MongoDB", "Redis", "Apache Kafka", "Docker", "Docker Compose", "AWS",
+      "AWS EC2", "AWS EKS", "AWS S3", "API Gateway", "CI/CD", "Jenkins",
+      "GitHub Actions", "JWT", "RBAC", "Rate Limiting", "System Design"
+    ],
+    "frontend": ["React.js", "Next.js", "Redux Toolkit", "Redux"],
+    "testing": ["Jest", "Unit Testing", "Integration Testing", "E2E Testing"],
+    "observability": ["Grafana", "Sentry", "Winston", "AWS CloudWatch"],
+    "web3": ["Web3.js", "Ethers.js", "EVM", "RWA Tokenization", "MultiSig", "Cross-Chain Transactions"],
+    "ai": [
+      "Generative AI", "Agentic AI", "AI Agents", "RAG", "OpenAI", "LangChain",
+      "Qdrant", "LLM integrations", "AI automation", "Claude Code", "Cursor", "Codex"
+    ]
+  },
+  "experienceByTech": {
+    "reactYears": 5,
+    "nodeYears": 5.7,
+    "typescriptYears": 4,
+    "mernYears": 5.7
+  },
+  "employmentHistory": [
+    {
+      "company": "Antier Solutions",
+      "title": "Software Engineer (Full Stack)",
+      "location": "Mohali, India",
+      "startDate": "2023-02-01",
+      "endDate": null
+    },
+    {
+      "company": "Arivani Technologies Pvt. Ltd.",
+      "title": "Software Engineer (MERN Stack)",
+      "location": "Lucknow, India",
+      "startDate": "2021-01-01",
+      "endDate": "2023-02-01"
+    },
+    {
+      "company": "Softpro India Computer Technologies",
+      "title": "Full Stack Developer (Internship)",
+      "location": "Lucknow, India",
+      "startDate": "2019-07-01",
+      "endDate": "2019-12-01"
+    }
+  ],
+  "currentCompany": "Antier Solutions",
+  "currentDesignation": "Software Engineer",
+  "currentLocation": "Mohali, India",
+  "preferredLocations": ["Remote", "Chandigarh", "Mohali", "Delhi NCR", "India"],
+  "preferredWorkMode": ["Remote", "Hybrid", "Onsite"],
+  "noticePeriodDays": 30,
+  "currentCtcLpa": 12,
+  "expectedCtcMinLpa": 18,
+  "expectedCtcMaxLpa": 20,
+  "employmentTypePreference": ["Full-time"],
+  "education": {
+    "degree": "Diploma in Computer Science and Engineering",
+    "institute": "Board of Technical Education, Uttar Pradesh",
+    "startYear": 2016,
+    "endYear": 2019,
+    "tenthPercent": 79.5,
+    "twelfthPercent": 76
+  },
+  "contact": {
+    "email": "sarojamit4956@gmail.com",
+    "phone": "+918707831236",
+    "alternatePhone": "+919120715464",
+    "linkedin": "https://www.linkedin.com/in/amit-saroj/",
+    "github": "https://github.com/amitsaroj",
+    "portfolio": "https://portfolio.autopilots.monster/"
+  },
+  "resumePath": "./resumes/Amit_Saroj_Senior_Full_Stack_Engineer(MERN).pdf",
+  "willingToRelocate": null,
+  "workAuthorization": null,
+  "visaStatus": null,
+  "certifications": []
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+naukri-browser-profile*/
+data/*.db
+data/*.db-journal
+logs/*.log
+logs/screenshots/*
+!logs/screenshots/.gitkeep
+*.tsbuildinfo
+.playwright-mcp/

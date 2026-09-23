@@ -1,0 +1,74 @@
+[
+  {
+    "id": "notice_period",
+    "patterns": ["notice period", "how soon can you join", "when can you join"],
+    "factPath": "noticePeriodDays",
+    "formatAs": "notice_period_days"
+  },
+  {
+    "id": "current_ctc",
+    "patterns": ["current ctc", "current salary", "current annual compensation", "present ctc"],
+    "factPath": "currentCtcLpa",
+    "formatAs": "ctc_lpa"
+  },
+  {
+    "id": "expected_ctc",
+    "patterns": ["expected ctc", "expected salary", "salary expectation", "expected compensation"],
+    "factPath": "expectedCtcMaxLpa",
+    "formatAs": "ctc_range"
+  },
+  {
+    "id": "total_experience",
+    "patterns": ["total experience", "years of experience", "overall experience", "work experience"],
+    "factPath": "totalExperienceStatement",
+    "formatAs": "raw"
+  },
+  {
+    "id": "react_experience",
+    "patterns": ["react experience", "years of react", "experience in react", "react.js experience"],
+    "factPath": "experienceByTech.reactYears",
+    "formatAs": "years"
+  },
+  {
+    "id": "node_experience",
+    "patterns": ["node experience", "years of node", "experience in node.js", "nodejs experience"],
+    "factPath": "experienceByTech.nodeYears",
+    "formatAs": "years"
+  },
+  {
+    "id": "typescript_experience",
+    "patterns": ["typescript experience", "years of typescript"],
+    "factPath": "experienceByTech.typescriptYears",
+    "formatAs": "years"
+  },
+  {
+    "id": "current_company",
+    "patterns": ["current company", "current employer", "present organization"],
+    "factPath": "currentCompany",
+    "formatAs": "raw"
+  },
+  {
+    "id": "current_location",
+    "patterns": ["current location", "current city", "where are you based"],
+    "factPath": "currentLocation",
+    "formatAs": "raw"
+  },
+  {
+    "id": "highest_qualification",
+    "patterns": ["highest qualification", "education", "degree"],
+    "factPath": "education.degree",
+    "formatAs": "raw"
+  },
+  {
+    "id": "phone",
+    "patterns": ["phone number", "contact number", "mobile number"],
+    "factPath": "contact.phone",
+    "formatAs": "raw"
+  },
+  {
+    "id": "email",
+    "patterns": ["email address", "email id"],
+    "factPath": "contact.email",
+    "formatAs": "raw"
+  }
+]
