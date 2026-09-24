@@ -1,4 +1,4 @@
-import { Page } from "playwright";
+import { Locator, Page } from "playwright";
 import { CandidateProfile } from "../profile/profile";
 import { answerQuestion } from "../questions/answerer";
 import { getLogger, logEvent } from "../logging/logger";
@@ -21,8 +21,8 @@ const DROPDOWN_SELECTORS = "select, [role='combobox']";
 const TEXT_INPUT_SELECTORS = "input[type='text'], input[type='number'], textarea, [contenteditable='true']";
 const SUBMIT_BUTTON_SELECTORS = "button:has-text('Save'), button:has-text('Submit'), button[type='submit']";
 
-async function findVisible(page: Page, selectors: string) {
-  const locator = page.locator(selectors);
+async function findVisible(scope: Page | Locator, selectors: string) {
+  const locator = scope.locator(selectors);
   const count = await locator.count();
   for (let i = 0; i < count; i++) {
     const el = locator.nth(i);
@@ -49,7 +49,10 @@ export async function handleQuestionnaire(
     const container = await findVisible(page, QUESTIONNAIRE_CONTAINER_SELECTORS.join(", "));
     if (!container) break;
 
-    const questionEl = await findVisible(page, QUESTION_TEXT_SELECTORS.join(", "));
+    // Scoped to the questionnaire container — searching the whole page
+    // previously matched an unrelated element elsewhere (e.g. a "Posted: "
+    // label) instead of the actual bot question (verified live 2026-09-24).
+    const questionEl = await findVisible(container, QUESTION_TEXT_SELECTORS.join(", "));
     const questionText = (await questionEl?.innerText().catch(() => "")) ?? "";
     if (!questionText.trim()) break;
 
@@ -65,14 +68,14 @@ export async function handleQuestionnaire(
       break; // dry-run inspects one round-trip; does not drive the chatbot forward
     }
 
-    const filled = await fillAnswer(page, result.answer);
+    const filled = await fillAnswer(container, result.answer);
     if (!filled) {
       logEvent("QUESTIONNAIRE_FIELD_FILL_FAILED", { questionText });
       return { allAnswered: false, blockedQuestion: questionText, answeredQuestions };
     }
     answeredQuestions.push({ question: questionText, answer: result.answer });
 
-    const submit = await findVisible(page, SUBMIT_BUTTON_SELECTORS);
+    const submit = await findVisible(container, SUBMIT_BUTTON_SELECTORS);
     await submit?.click().catch(() => undefined);
     await page.waitForTimeout(600);
   }
@@ -80,16 +83,19 @@ export async function handleQuestionnaire(
   return { allAnswered: true, blockedQuestion: null, answeredQuestions };
 }
 
-async function fillAnswer(page: Page, answer: string): Promise<boolean> {
-  const radio = await findVisible(page, RADIO_OPTION_SELECTORS);
+async function fillAnswer(container: Locator, answer: string): Promise<boolean> {
+  const radio = await findVisible(container, RADIO_OPTION_SELECTORS);
   if (radio) {
     await radio.check().catch(() => undefined);
     return true;
   }
 
-  const dropdown = await findVisible(page, DROPDOWN_SELECTORS);
+  const dropdown = await findVisible(container, DROPDOWN_SELECTORS);
   if (dropdown) {
     await dropdown.click().catch(() => undefined);
+    // The options list itself is typically rendered outside the drawer
+    // container (as a page-level popover), so this lookup stays page-wide.
+    const page = container.page();
     const option = page.locator(`[role='option']:has-text("${answer}"), option:has-text("${answer}")`).first();
     if (await option.isVisible().catch(() => false)) {
       await option.click().catch(() => undefined);
@@ -97,7 +103,7 @@ async function fillAnswer(page: Page, answer: string): Promise<boolean> {
     }
   }
 
-  const textInput = await findVisible(page, TEXT_INPUT_SELECTORS);
+  const textInput = await findVisible(container, TEXT_INPUT_SELECTORS);
   if (textInput) {
     await textInput.fill(answer).catch(async () => {
       await textInput.type(answer).catch(() => undefined);

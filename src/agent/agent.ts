@@ -68,9 +68,20 @@ export async function runAgent(
         throw err;
       }
 
+      if (summary.keywordsSearched > 1) {
+        // Back-to-back automated searches with zero pacing look bot-like to
+        // Naukri; only application submissions had a delay before (Phase 11
+        // is about not hammering the site generally, not just on submit).
+        const delayMs = 3000 + Math.round(Math.random() * 4000);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
       await runSearch(page, keyword, config.MAX_JOB_AGE_DAYS);
       const rawListings = await scrapeJobCards(page, keyword);
-      const freshListings = filterByFreshness(rawListings, config.MAX_JOB_AGE_DAYS);
+      const freshListings = filterByFreshness(rawListings, config.MAX_JOB_AGE_DAYS)
+        // Naukri's own "Sort by: Date" UI control has never been reliably
+        // found by selector (Phase 19), so enforce newest-first ourselves
+        // instead of trusting the page's default (relevance) ordering.
+        .sort((a, b) => (a.postedDaysAgo ?? 999) - (b.postedDaysAgo ?? 999));
       summary.jobsCollected += freshListings.length;
 
       for (const listing of freshListings) {

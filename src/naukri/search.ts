@@ -1,5 +1,6 @@
 import { Page } from "playwright";
 import { getLogger } from "../logging/logger";
+import { detectSecurityChallenge } from "../browser/session";
 
 /**
  * Builds a Naukri keyword search URL with a freshness filter. Selector/URL-
@@ -41,5 +42,8 @@ export async function runSearch(page: Page, keyword: string, maxAgeDays: number)
   const url = buildSearchUrl(keyword, maxAgeDays);
   getLogger().info({ event: "SEARCH_STARTED", keyword, url });
   await page.goto(url, { waitUntil: "domcontentloaded" });
+  // Search pages previously had no challenge check at all, so a CAPTCHA/
+  // interstitial here would silently hang instead of being logged (Phase 12).
+  await detectSecurityChallenge(page);
   await sortByNewest(page);
 }

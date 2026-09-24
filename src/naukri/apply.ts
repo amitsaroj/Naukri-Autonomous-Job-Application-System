@@ -53,6 +53,14 @@ export async function applyToJob(
   try {
     await page.goto(job.url, { waitUntil: "domcontentloaded" });
     await detectSecurityChallenge(page);
+    // The apply/company-site button is client-rendered, so checking right
+    // after domcontentloaded raced React's hydration and always reported
+    // "not found" even when it existed (verified live 2026-09-24 — Phase 19).
+    await page
+      .locator([...APPLY_BUTTON_SELECTORS, ...COMPANY_SITE_SELECTORS].join(", "))
+      .first()
+      .waitFor({ state: "visible", timeout: 10_000 })
+      .catch(() => undefined);
 
     const bodyText = await page.locator("body").innerText().catch(() => "");
     if (ApplicationTracker.detectNaukriQuotaMessage(bodyText)) {

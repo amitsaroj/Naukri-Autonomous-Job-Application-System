@@ -15,7 +15,7 @@ const envSchema = z.object({
     .transform((v) => v.toLowerCase() === "true"),
   MAX_JOB_AGE_DAYS: z.coerce.number().int().positive().default(3),
   SEARCH_KEYWORDS: z.string().optional(),
-  MIN_MATCH_SCORE: z.coerce.number().min(0).max(100).default(70),
+  MIN_MATCH_SCORE: z.coerce.number().min(0).max(100).default(50),
   MAX_APPLICATIONS_PER_RUN: z.coerce.number().int().positive().default(30),
   MAX_APPLICATIONS_PER_DAY: z.coerce.number().int().positive().default(50),
   DELAY_BETWEEN_APPLICATIONS_MIN_SEC: z.coerce.number().int().nonnegative().default(10),

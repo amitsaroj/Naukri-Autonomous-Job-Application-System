@@ -393,7 +393,7 @@ Evaluate:
 
 Default:
 
-MIN_MATCH_SCORE=70
+MIN_MATCH_SCORE=50
 
 Do not blindly apply to every latest job.
 
