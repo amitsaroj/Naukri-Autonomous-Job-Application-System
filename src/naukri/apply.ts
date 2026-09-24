@@ -37,10 +37,10 @@ const SUCCESS_MARKER_SELECTORS = [
 
 /**
  * Runs the Easy-Apply flow for a single job: detect apply vs external
- * redirect, upload resume, answer the questionnaire (blocking on unknown
- * mandatory questions, Phase 9), and submit — unless dryRun, per Phase 13,
- * in which case it inspects the flow but never clicks the final submit.
- * Selector chain is a fallback list, not live-verified (Phase 19).
+ * redirect, then either stop (dryRun — never clicks Apply at all; see the
+ * CRITICAL comment below for why) or click through resume upload, answer
+ * the questionnaire (blocking on unknown mandatory questions, Phase 9),
+ * and submit for real.
  */
 export async function applyToJob(
   page: Page,
@@ -78,17 +78,44 @@ export async function applyToJob(
       return { status: "failed", error: "Apply button not found (selector drift — Phase 19)" };
     }
 
+    // CRITICAL (Phase 13): dry-run must stop here, before ever clicking
+    // Apply. This code previously clicked Apply unconditionally and only
+    // gated the *final* Submit click on dryRun, on the assumption that
+    // Apply just opens a review drawer. That's false for jobs with no
+    // follow-up questionnaire: clicking Apply there IS the full submission
+    // on Naukri's side. Verified live 2026-09-24 the hard way — two "dry
+    // run" inspections of questionnaire-less jobs turned out to be real,
+    // already-submitted applications. Never repeat that: nothing past this
+    // point may run when dryRun is true.
+    if (dryRun) {
+      logEvent("DRY_RUN_APPLICATION_INSPECTED", {
+        jobId: job.jobId,
+        title: job.title,
+        company: job.company,
+        url: job.url,
+        note: "Apply button found; not clicked — dry-run cannot preview the questionnaire without risking a real submission.",
+      });
+      return { status: "dry_run" };
+    }
+
     await applyButton.click();
     await page.waitForTimeout(800);
     await detectSecurityChallenge(page);
 
+    // A failed fresh upload isn't fatal: verified live 2026-09-24 that a
+    // resume is already on file on the Naukri profile (Easy Apply reuses it
+    // silently for jobs that don't prompt for upload at all), so this widget
+    // failing doesn't mean the application has no resume — just log and
+    // continue rather than abandoning an otherwise-good application.
     const resumeUpload = await uploadResumeIfPrompted(page, resumePath);
     if (resumeUpload.attempted && !resumeUpload.success) {
-      const screenshotPath = await saveScreenshot(page, `resume_upload_failed_${job.jobId ?? "unknown"}`);
-      return { status: "failed", error: "Resume upload was rejected by Naukri", screenshotPath };
+      await saveScreenshot(page, `resume_upload_failed_${job.jobId ?? "unknown"}`);
+      logEvent("RESUME_UPLOAD_FAILED_CONTINUING", { jobId: job.jobId, url: job.url });
     }
 
-    const questionnaireOutcome = await handleQuestionnaire(page, profile, dryRun);
+    // dryRun is always false past this point (guarded above), so the
+    // questionnaire is always actually filled and saved, never previewed.
+    const questionnaireOutcome = await handleQuestionnaire(page, profile);
     if (!questionnaireOutcome.allAnswered) {
       const screenshotPath = await saveScreenshot(page, `blocked_${job.jobId ?? "unknown"}`);
       logEvent("APPLICATION_BLOCKED", {
@@ -101,17 +128,6 @@ export async function applyToJob(
         blockedQuestion: questionnaireOutcome.blockedQuestion ?? undefined,
         screenshotPath,
       };
-    }
-
-    if (dryRun) {
-      logEvent("DRY_RUN_APPLICATION_INSPECTED", {
-        jobId: job.jobId,
-        title: job.title,
-        company: job.company,
-        url: job.url,
-        answeredQuestions: questionnaireOutcome.answeredQuestions,
-      });
-      return { status: "dry_run" };
     }
 
     const submitButton = await firstVisible(page, [

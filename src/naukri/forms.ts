@@ -33,14 +33,15 @@ async function findVisible(scope: Page | Locator, selectors: string) {
 
 /**
  * Polls Naukri's screening-question flow (chatbot-style, one question per
- * step) and answers strictly from verified profile facts. Stops and reports
- * a block on the first mandatory question it can't answer (Phase 9) — never
- * guesses. Selector chain is a fallback list, not live-verified (Phase 19).
+ * step) and answers strictly from verified profile facts, actually filling
+ * and saving each answer. Stops and reports a block on the first mandatory
+ * question it can't answer (Phase 9) — never guesses. Only ever called for
+ * a real (non-dry-run) application — the caller must never reach this after
+ * an Apply click made in dry-run mode (Phase 13; see apply.ts).
  */
 export async function handleQuestionnaire(
   page: Page,
   profile: CandidateProfile,
-  dryRun: boolean,
   maxIterations = 40
 ): Promise<QuestionnaireOutcome> {
   const answeredQuestions: Array<{ question: string; answer: string }> = [];
@@ -78,12 +79,6 @@ export async function handleQuestionnaire(
     if (!result.answered || !result.answer) {
       logEvent("QUESTIONNAIRE_BLOCKED", { questionText });
       return { allAnswered: false, blockedQuestion: questionText, answeredQuestions };
-    }
-
-    if (dryRun) {
-      answeredQuestions.push({ question: questionText, answer: result.answer });
-      logEvent("DRY_RUN_QUESTION_ANSWER_IDENTIFIED", { questionText, answer: result.answer });
-      break; // dry-run inspects one round-trip; does not drive the chatbot forward
     }
 
     const filled = await fillAnswer(container, result.answer);
