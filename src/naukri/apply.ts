@@ -82,7 +82,11 @@ export async function applyToJob(
     await page.waitForTimeout(800);
     await detectSecurityChallenge(page);
 
-    await uploadResumeIfPrompted(page, resumePath);
+    const resumeUpload = await uploadResumeIfPrompted(page, resumePath);
+    if (resumeUpload.attempted && !resumeUpload.success) {
+      const screenshotPath = await saveScreenshot(page, `resume_upload_failed_${job.jobId ?? "unknown"}`);
+      return { status: "failed", error: "Resume upload was rejected by Naukri", screenshotPath };
+    }
 
     const questionnaireOutcome = await handleQuestionnaire(page, profile, dryRun);
     if (!questionnaireOutcome.allAnswered) {

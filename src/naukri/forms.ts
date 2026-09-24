@@ -46,15 +46,33 @@ export async function handleQuestionnaire(
   const answeredQuestions: Array<{ question: string; answer: string }> = [];
 
   for (let i = 0; i < maxIterations; i++) {
-    const container = await findVisible(page, QUESTIONNAIRE_CONTAINER_SELECTORS.join(", "));
-    if (!container) break;
+    // Wait (don't just instant-check) for the drawer — it can still be
+    // rendering right after an Apply click or a resume-upload round trip
+    // (verified live 2026-09-24: an instant check here previously raced
+    // the drawer's own re-render and silently reported "no questionnaire").
+    const containerLocator = page.locator(QUESTIONNAIRE_CONTAINER_SELECTORS.join(", ")).first();
+    const containerAppeared = await containerLocator
+      .waitFor({ state: "visible", timeout: 6_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!containerAppeared) break; // Genuinely no (more) questionnaire steps for this job.
+    const container = containerLocator;
 
     // Scoped to the questionnaire container — searching the whole page
     // previously matched an unrelated element elsewhere (e.g. a "Posted: "
     // label) instead of the actual bot question (verified live 2026-09-24).
-    const questionEl = await findVisible(container, QUESTION_TEXT_SELECTORS.join(", "));
+    // Chat transcripts keep prior messages visible, so take the LAST
+    // matching message (the current question), not the first.
+    const botMessages = container.locator(QUESTION_TEXT_SELECTORS.join(", "));
+    const botMessageCount = await botMessages.count();
+    const questionEl = botMessageCount > 0 ? botMessages.nth(botMessageCount - 1) : null;
     const questionText = (await questionEl?.innerText().catch(() => "")) ?? "";
-    if (!questionText.trim()) break;
+    if (!questionText.trim()) {
+      // The drawer IS open but we couldn't identify the current question -
+      // a parsing gap, not "done". Never silently treat this as answered.
+      logEvent("QUESTIONNAIRE_BLOCKED", { questionText: "", reason: "question_text_not_found" });
+      return { allAnswered: false, blockedQuestion: "(unrecognized questionnaire state)", answeredQuestions };
+    }
 
     const result = answerQuestion(questionText, profile, true);
     if (!result.answered || !result.answer) {
@@ -114,12 +132,36 @@ async function fillAnswer(container: Locator, answer: string): Promise<boolean> 
   return false;
 }
 
-/** Uploads the resume when Easy Apply exposes a file input; otherwise the existing profile resume is reused. */
-export async function uploadResumeIfPrompted(page: Page, resumePath: string): Promise<boolean> {
+export interface ResumeUploadResult {
+  attempted: boolean;
+  success: boolean;
+}
+
+/**
+ * Uploads the resume when Easy Apply exposes a file input; otherwise the
+ * existing profile resume is reused. Verifies Naukri's own upload-validation
+ * feedback rather than assuming success from setInputFiles() alone — a real
+ * run previously logged RESUME_UPLOADED while Naukri's UI showed "File
+ * upload was unsuccessful" for both attempts (verified live 2026-09-24).
+ */
+export async function uploadResumeIfPrompted(page: Page, resumePath: string): Promise<ResumeUploadResult> {
   const fileInput = page.locator("input[type='file']").first();
   const present = (await fileInput.count().catch(() => 0)) > 0;
-  if (!present) return false;
+  if (!present) return { attempted: false, success: true };
+
   await fileInput.setInputFiles(resumePath);
+  await page.waitForTimeout(1500);
+
+  const failureVisible = await page
+    .locator("text=/file upload was unsuccessful|upload.*(fail|unsuccessful)/i")
+    .first()
+    .isVisible()
+    .catch(() => false);
+  if (failureVisible) {
+    getLogger().warn({ event: "RESUME_UPLOAD_FAILED", resumePath });
+    return { attempted: true, success: false };
+  }
+
   getLogger().info({ event: "RESUME_UPLOADED", resumePath });
-  return true;
+  return { attempted: true, success: true };
 }
